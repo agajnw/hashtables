@@ -1,0 +1,104 @@
+Hash-tables with different hashing functions (Jan 2014)
+
+DOC IN POLISH:
+
+Tablice mieszające (hash-tables) z różnymi funkcjami rozpraszania
+
+1. Specyfikacja problemu
+
+Przedmiotem analizy jest tablica mieszająca – struktura danych, która jest jednym ze sposobów realizacji tablicy asocjacyjnej, tj. abstrakcyjnego typu danych służącego do przechowywania informacji w taki sposób, aby możliwy był do nich szybki dostęp. Tablica przechowuje rekordy zawierające napisy. Długość tablicy jest ograniczona arbitralnie przez pewną stałą K. Dla danego napisu s oblicza się wartość k=M(s) (gdzie M(s) – jedna z trzech funkcji mieszających, która jako argument przyjmuje napis, a zwraca liczbę całkowitą z określonego przez algorytm mieszający zakresu) i umieszcza strukturę reprezentującą napis w tablicy mieszającej: H[k]. W przypadku kolizji funkcji mieszającej reprezentujące napis s struktury danych zapisywane są w liście dwukierunkowej, której głowa to H[k]. Program implementuje dodawanie, usuwanie i enumerację elementów w H[].
+
+2. Aktywacja programu
+Program jest wywoływany z linii komend. Jako parametr możemy podać:
+- nazwę pliku z napisami, które chcemy wprowadzić do tablicy (–f  <nazwa pliku>)
+- napisy, które chcemy wprowadzić do tablicy, oddzielone spacją. Napisy muszą być poprzedzone znakami ‘-i’ (np. –i ala -i ma –i kota)
+- informację o wywołaniu programu z danymi generowanymi automatycznie (-g). Jest możliwość podania liczby napisów do wygenerowania (np. –g 200)
+-numer algorytmu, który ma być wykorzystany w tablicy mieszającej (1, 2 lub 3 – np. –a 1). W przypadku braku tego parametru test wykonywany jest przy wykorzystaniu po kolei każdego z algorytmów
+ W przypadku wywołania programu bez parametru albo z nieprawidłowymi parametrami program wyświetli informację o prawidłowych sposobach aktywizacji programu.
+ 
+3. Dane wejściowe i prezentacja wyników
+
+Dostępne są trzy sposoby wprowadzania danych wejściowych:
+1) Dane wejściowe są podawane w formie pliku tekstowego <nazwa pliku>.txt. Plik zawiera napisy, które chcemy wprowadzić do tablicy, w konwencji jeden wyraz w jednej linii.
+2) Dane są generowane przez program. Generowane są ciągi znaków (złożenie wielkich i małych liter) o długości od 2 do 7 znaków. Użytkownik może określić liczbę generowanych danych.
+3) Użytkownik może sam wprowadzić napisy. Wprowadza wyrazy wprowadzając odpowiednią opcję przy wywoływaniu programu.
+
+Wyniki działania programu są przedstawione w generowanym pliku results.html. Plik zawiera zestawienie danych pomiaru czasu wykonania w formie tabeli.
+
+4. Implementacja
+
+Struktury danych:
+1) Tablica mieszająca jest zaimplementowana w postaci tablicy o rozmiarze równym 513 (odpowiada to wartości 2n-1, n=9 – dobranie takiej wartości ma wpływ na zmniejszenie prawdopodobieństwa kolizji elementów). Rozmiar ograniczony jest sposobem prezentowania wyników – przy większej liczbie elementów mogłyby stać się nieczytelne. Element tablicy to lista dwukierunkowa. Każdy napis jest reprezentowany przez strukturę ListElement, która zawiera pole string (pierwotny napis w postaci std::string) oraz wskaźniki na poprzedni i następny element w liście. Jeśli w danej liście dwukierunkowej jest jeden element, jego wskaźniki prev i next to NULL.
+2) Dane wczytywane z pliku są umieszczane w vectorze z biblioteki <vector>.
+
+Algorytmy:
+1) Funkcje mieszające
+- hash1 
+Arytmetyczne dodawanie wartości kodu ASCII kolejnego znaku wchodzącego w skład przetwarzanego napisu do reprezentacji bitowej bieżącej wartości funkcji mieszającej przesuniętej w lewo o 3 pozycje.
+Główna pętla funkcji:
+  while (i<s.size())  {
+    c=s[i];
+    ret = c + (ret << 3);
+    i++;
+}
+
+- hash2
+Klasyczny algorytm mieszający – sumowanie wartości kodu ASCII poszczególnych znaków przetwarzanego napisu i obliczanie reszty z dzielenia tej liczby przez rozmiar tablicy mieszającej.
+Główna pętla funkcji:
+for (int i=0;i<s.size();i++)
+	ret = ret + int(s.at(i));
+return ret % K2;
+
+- hash3
+Algorytm Murmur2 w wersji 32-bitowej, stworzony przez Austina Appleby. Jest to algorytm dobrze sprawujący się przy tablicach mieszających różnego typu, przy czym sam nie jest skomplikowany. Jest ceniony za szybkość działania. Używa wielokrotnych przesunięć bitowych oraz zmiennych dodatkowych (m, r, seed).
+Dla każdego bajtu napisu wykonywane są operacje przesunięcia bitowego oraz mnożenia przez wartości m, r i seed.
+Główna pętla funkcji:
+while (i<s.size()){
+	k = s.at(i);
+	k = k*m;
+	k = k^ (k>>r);
+	k = k*m;
+	hash = hash *m;
+	hash = hash ^ k;
+}
+
+2) Obsługa tablicy mieszającej
+Zaimplementowane zostaną następujące funkcje:
+- dodawanie elementu
+Funkcja jako argument przyjmuje przetwarzany napis. Wywołuje odpowiednią funkcję mieszającą, a zwrócona wartość staje się indeksem elementu w tablicy. W razie wystąpienia kolizji element jest umieszczany w liście dwukierunkowej zaczynającej się w danym miejscu tablicy mieszającej.
+- usuwanie elementu
+- usuwanie wszystkich elementów z tablicy
+- kopiowanie wektora napisów do tablicy
+
+5. Spodziewana złożoność algorytmów
+
+n-liczba napisów, m – liczba znaków w napisie
+Na złożoność ma wpływ liczba napisów wprowadzanych do tablicy mieszającej oraz ich długość. Długość przyjmuje wartość z dość ograniczonego zakresu (zazwyczaj pomiędzy 1 a 10), a średnia liczba znakow w wyrazie nie przekracza 20. Wartość ta jest pomijalnie mała w stosunku do n – liczby napisów. Przy ocenie spodziewanej złożoności algorytmu długość nie jest więc brana pod uwagę.
+Dla wszystkich algorytmów mieszających w programie złożoność obliczeniowa jest równa O(n). 
+
+6. Moduły programu
+Program składa się z dwóch logicznych części:
+1) Część realizująca tablicę mieszającą oraz funkcje operujące na niej. Ta część składa się z pliku nagłówkowego hashtable.h i pliku źródłowego hashtable.cpp.
+
+2) Część realizująca interfejs użytkownika oraz obsługę testowania. Składa się z pliku nagłówkowego ui.h i pliku źródłowego ui.cpp.
+Intefejs użytkownika jest realizowany w formie tekstowej.
+
+7. Testowanie
+
+Program testowany był pod wieloma kątami:
+1) dane pobierane były z pliku. Plik zawierał tekst o określonej liczbie wyrazów (100, 1000, 5000, 10000), wygenerowany przy pomocy strony http://pl.lipsum.com/
+2) dane były generowane przez program:
+- w przypadku nie zdefiniowania liczby wyrazów do wygenerowania, program generuje 5000 wyrazów
+3) podany był konkretny algorytm do testowania:
+4) brak wyboru algorytmu, który skutkuje wywołaniem programu dla wszystkich trzech algorytmów
+
+Początkowe testowanie zawierało wypisywanie dodanych wyrazów w konsoli, jednak przy większych rozmiarach danych opcja ta stała się niewygodna. 
+
+8. Wyniki pomiarów czasu wykonania
+
+Spodziewana złożoność obliczeniowa dla wszystkich trzech zaimplementowanych algorytmów mieszających wynosiła O(n).
+Program generuje tabele wyników pomiaru czasu, która zawiera trzy kolumny: n – rozmiar problemu, t(n) – zmierzony czas wykonania dla danego rozmiaru, q(n) – współczynnik zgodności oceny teorytycznej z pomiarem czasu.
+Zielonym kolorem zaznaczony jest wiersz, w którym znajduje się mediana rozmiarów problemów, czyli rozmiar, dla którego znormalizowany jest współczynnik oceny teorytycznej z pomiarem czasu. 
+Na rys. 1 znajduje się tabela wygenerowana przy pomocy komendy './hashtables.o -a 0 -g 5000', a więc zostało wygenerowanych 5000 wyrazów, które umieszczono w tabeli mieszającej, przy wykorzystaniu po kolei wszystkich algorytmów mieszających zaimplementowanych w programie.
+Z tabeli widać, że wyniki pomiaru czasu dla trzech algorytmów mieszających są zbliżone do 1, a dla wartości będącej medianą są równe 1.
+Z tabeli wynika również, że algorytm 3 jest najszybszym z przetestowanych algorytmów mieszających.
