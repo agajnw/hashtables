@@ -1,9 +1,9 @@
 /*
  * Agnieszka Janowicz
- * 
+ *
  * Tablice mieszające (hash-tables) z różnymi funkcjami rozpraszania
- * 
- * 
+ *
+ *
  */
 
 #include <iostream>
